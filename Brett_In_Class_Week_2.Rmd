@@ -1,0 +1,79 @@
+---
+title: "Week 2 In Class Assignment Intro to Data Wrangling"
+author: "S.A. Valentine"
+date: "2024-08-20"
+output: html_document
+---
+
+You will use the Stream solutes data to answer the following questions. You will use the tools we have covered so far within `dplyr`. Please annotate your code, provide brief reasoning as to why you used specific functions to complete the tasks, and provide a brief interpretation of the result of the code chunk.
+
+Task 1: Read in data. How many columns and rows are there? 
+
+What is the mode of each variable in the dataset? 
+
+```{r Task 1}
+library(tidyverse)
+streams <- read_csv("streamsolutes.csv")
+dim(streams)
+summary(streams)
+```
+
+
+Task 2: How many sites are in the dataset? How many solutes and what are the solutes?
+
+```{r Task 2}
+unique(streams$Site)
+
+length(unique(streams$Solute))
+print(unique(streams$Solute))
+```
+
+Task 3 Rename the Q_Ls column to "Discharge (Ls)", then keep only the new discharge column and Site, Solute, and mgL. Save these updated data as a new object.
+
+```{r Task 3}
+new_streams <- rename(streams, Discharge_Ls = Q_Ls) 
+new_streams_1 <- select(new_streams, c("Discharge_Ls", "Site", "Solute", "mgL"))
+
+#streams_BBWM$Date <- as.numeric(streams_BBWM$Date)
+```
+
+
+Task 4: Filter the new dataset for site "BBWM". Make a quick plot of date and discharge.
+
+
+```{r Task 4}
+streams_BBWM <- filter(new_streams, Site == "BBWM")
+ggplot(data = streams_BBWM, mapping = aes(x = Date, y = Discharge_Ls)) +
+                 geom_point()
+?ggplot()
+```
+
+Task 5: Filter the original dataset for site "TLW" and solute "Ca" and save it as a new object. Calculate the minimum, maximum, mode, and mean of the Ca values.
+
+```{r}
+TLW_Ca <- filter(streams, Site == "TLW" & Solute == "Ca")
+```
+
+
+
+Task 6: Create a new column called "Discharge cfs" (cubic feet per second). The values should be converted from Q_Ls (liters per second) from the original dataset. What is the mean, maximum, and minimum values of Discharge (cfs) for the year 1998 in site ELA?  
+
+```{r Task 6}
+new_col <- mutate(streams, Discharge_cfs = Q_Ls/28.32)
+str(new_col)
+test <- new_col |>
+ filter(between(Date, as.Date('1998-01-20'), as.Date('1998-12-31')))
+```
+
+
+Task 7: Where and when did the highest NH4 value occur? 
+
+```{r Task 7}
+View(test)
+NH4 <- filter(test, Solute == "NH4")
+str(NH4)
+names(NH4)
+Ordered_NH4<- NH4 |>
+  arrange(desc(Discharge_cfs))
+
+```

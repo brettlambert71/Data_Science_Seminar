@@ -1,0 +1,114 @@
+---
+title: "Week 1 Answers"
+author: "Brett Lambert"
+date: "8/22/2024"
+output: html_document
+---
+
+# Basic R Practice Answers
+
+## Exercises
+
+For the following exercises, please create code chunks and type out all your code after each question or task.
+
+1. Describe your previous experience with R. 
+```{r}
+# I have experience using R for data manipulation, cleaning, multivariate analyses like PCA, population genetic analyses, and phylogenetic comparative methods. I have read most of R4DS and also written a script to pull genbank records given a CSV of accession numbers.
+```
+
+
+1. What skills do you hope to gain from this course? What reservations do you have regarding this course? 
+```{r}
+#I hope to gain some new insights on application of methods to real data and also hoping to understand more clearly which aspects of R I should focus on to become more marketable to industry careers.
+```
+
+1. Write a short paragraph on your research using 4 R Markdown text formattings. 
+
+#Species delimitation within _Asarum canadense_
+
+My research focuses on a species of plant that exhibits a wide range of morphology; previously leading to the recognition of **3 species**. This system is currently recognized as 1 species, however and we want to investigate the different morphotypes with morhpological and genetic data to determine if these are distinct species or one phenotypically plastic species. This research is currently ~~making me question my life choices~~ going well and hopefully will be finished within a year.
+
+
+## Search for the filter function. 
+
+```{r}
+#?filter()
+```
+
+
+
+## Search for the dplyr package and look up summarize within this package. 
+
+```{r}
+#?dplyr::summarise()
+```
+
+
+
+## Set your working directory to your pictures folder. 
+
+```{r}
+#Don't really want to change directory. I use cloud-based folders so it is not straightforawrd.
+library(tidyverse)
+getwd()
+#?setwd()
+#setwd("C:/Users/brettl71/Pictures")
+
+#setwd("Users/brettl71/Library/CloudStorage/OneDrive-TheOhioStateUniversity/OSU_Courses_3_22_24/AU_24/Data_Tidying_Seminar/Week_1
+```
+
+
+
+## Import a dataset or table.
+
+```{r}
+ex <- read.csv("megaGymDataset.csv")
+```
+
+
+
+## What is the structure of your data? What are your column headers? Change the class of your data for this R session.
+
+```{r}
+View(ex)
+str(ex)
+as.numeric(ex$Rating)
+```
+
+
+
+## Create an object that has a minimum of 10 pieces of data. What is the structure of this data? 
+
+```{r}
+obj <- c(1,33,4,12,9,0,35,224,198,86)
+str(obj)
+```
+
+
+
+## Use the R dataset "chickwts". What are the dimensions of this dataset? Use attach to create a simple boxplot of weight by feed type. 
+
+```{r}
+chc <- chickwts
+dim(chc)
+attach(chc)
+boxplot(weight ~ feed)
+detach(chc)
+```
+
+
+
+## Add a column of data called "DPH" (days post hatch) to the chickwts dataset. There are multiple ways to add a column to a dataset. While we did not go over adding a column explicitly, use this question as a way to learn the help functions and increase your savvy with googling R questions. Save this dataset to your desktop. 
+
+```{r}
+chc$DPH <- 0
+chc
+
+chc2 <- chc |>
+  mutate("DPH" = 0)
+chc2
+
+?mutate
+```
+
+## Attempt to knit the document to an .html or other file format once completed. Turn in both the R Markdown (.rmd) and knitted file if you were successful. 

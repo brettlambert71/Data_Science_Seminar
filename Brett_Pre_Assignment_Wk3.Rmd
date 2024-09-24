@@ -1,0 +1,136 @@
+---
+title: "Week 3 Assignment Data Wrangling with the Pipe"
+author: "Brett Lambert"
+date: "2024-09-04"
+output: html_document
+---
+
+You will use the tools we have covered so far within `dplyr` and synthesis the information by using the pipe. You will use the Gillnet catches from 1930-1932 in Lake Michigan data to answer the following questions. Please annotate your code, provide brief reasoning as to why you used specific functions to complete the tasks, and provide a brief interpretation of the result of the code chunk.
+
+
+
+Task 1: What is the total number of fish by species in each GN_EFFORT_ID? 
+
+What is the total number of individuals of species 307 for each gillnet ID? 
+
+Which gillnet effort has the greatest catch of species 307 (use arrange function)?
+
+```{r Task 1}
+#total number of fish by species in each GN_EFFORT_ID
+
+
+#Group by gillnet and species
+#summarize by total number using summarize with n() or count
+library(tidyverse)
+gn_data <- read_csv("lakeM_Fulmar_Catch.csv")
+
+grouped_df <- group_by(gn_data, GN_EFFORT_ID, SPECIES) |> summarise(total_count=sum(N))
+
+print(unique(grouped_df$total_count))
+
+
+
+#total number of inds for each gillnet ID for species 307
+#use code from above and filter to include only records for species 307
+filtered_df <- group_by(gn_data, GN_EFFORT_ID, SPECIES) |> filter(SPECIES == 307) |>
+  summarise(total_count=sum(N)) 
+
+print(unique(filtered_df$SPECIES))
+#It looks like we've successfully filtered to only have 307
+
+
+#Greatest catch of species 307
+#Same code as above and arrange by column representing number of fish.
+max_df <- group_by(gn_data, GN_EFFORT_ID, SPECIES) |> filter(SPECIES == 307) |>
+  summarise(total_count=sum(N)) |>
+  arrange(desc(total_count))
+
+print(max(max_df$total_count))
+
+#Highest count of fish for species 307 is 186
+```
+
+
+Task 2: Which gillnet ID(s) has/have the greatest species richness (highest diversity/number of species) and what is that richness? How many gillnet IDs have a species richness of 3-7? 
+
+```{r Task 2}
+#Group by GN_EFFORT_ID and SPECIES
+grouped_df_2 <- group_by(gn_data, GN_EFFORT_ID, SPECIES)
+#summarize data using any function I usually use n() to get total observations for each GN, Species combination, although the summarized column is not used.
+species_df <- group_by(gn_data, GN_EFFORT_ID) |>
+  summarise(total_count = n_distinct(SPECIES)) |>
+  arrange(desc(total_count))
+
+#GN_Effort_ID 44260 has the highest richness at 13
+
+print(max(species_df$total_count))
+
+#Group by GN_EFFORT_ID
+species_df_2 <- group_by(gn_data, GN_EFFORT_ID) |>
+  summarise(total_count = n_distinct(SPECIES)) |>
+  filter(total_count < 8 & total_count > 2) |>
+  arrange(desc(total_count))
+
+length(unique(species_df_2$GN_EFFORT_ID))
+#868
+
+```
+
+Task 3 What is the mean, max, and min Weight (in kg) as well as sample size for each species within gillnet ID 44365? 
+
+Hint: First, remove all rows without weight data. 
+
+What is the mean, max, and min Weight (in kg) as well as sample size for each species across all gillnets? 
+
+Which gillnet had the largest fish? Which species and how big was the largest fish in weight and length in cm? 
+
+```{r Task 3}
+#Task 3 What is the mean, max, and min Weight (in kg) as well as sample size for each species within gillnet ID 44365? 
+
+#Get cleaned data for further processing. Remove NAs in weight column
+weight_data <- gn_data |>
+  filter(!is.na(WEIGHT)) |>
+  mutate(WEIGHT = WEIGHT/1000)
+
+#Filter for desired GN_EFFORT_ID
+weight_44365 <- weight_data |>
+  group_by(GN_EFFORT_ID) |>
+  filter(GN_EFFORT_ID == 44365) 
+
+#Get summary stats of weight for observations having the specific ID
+summary(weight_44365$WEIGHT)
+
+#print unique species obs and corresponding count
+print(select(weight_44365, c(SPECIES, N)))
+
+
+
+
+#What is the mean, max, and min Weight (in kg) as well as sample size for each species across all gillnets?
+
+#For each species across all gillnets, group by species
+species_group <- weight_data |>
+  group_by(SPECIES) |>
+  arrange(SPECIES, .locale = "en")
+summary(species_group$WEIGHT)
+
+
+species_group_1 <- weight_data |>
+  group_by(SPECIES) |>
+  summarise(N = n())
+
+
+
+
+#Which gillnet had the largest fish? Which species and how big was the largest fish in weight and length in cm?
+
+#Arrange by weight
+by_weight <- weight_data |>
+  arrange(desc(WEIGHT))
+
+#Take out row that is the max of weight and compare to arranged df
+maximum <- weight_data |>
+  filter(WEIGHT == max(WEIGHT))
+```
+
+

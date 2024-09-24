@@ -1,0 +1,81 @@
+---
+title: "Brett Week 4 In-Class Assignment"
+author: "Brett Lambert"
+date: "2024-09-11"
+output: html_document
+---
+
+You will use the Stream solutes data to answer the following questions. You will use the tools we have covered so far within the tidyverse and synthesize the information to answer the following questions. Please annotate your code, provide brief reasoning as to why you used specific functions to complete the tasks, and provide a brief interpretation of the result of the code chunk.
+
+
+Task 1: replace all of the NAs in the FWMC column of the dataset with "x". How many unknown FWMC (x) values are there for each Site and Solute? 
+
+```{r}
+#Load tidyverse and data
+library(tidyverse)
+solutes <- read_csv("streamsolutes.csv")
+
+#To use mutate, you need cols to be the same data type. Here we need to convert column to character first then replace NAs with "x"
+solutes$FWMC <- as.character(solutes$FWMC)
+solutes_2 <- solutes |>
+  mutate(FWMC = replace_na(FWMC, "x"))
+
+#Filter for observations where FWMC is "x"
+x_count <- solutes_2 |>
+  filter(FWMC == "x")
+nrow(x_count)
+```
+
+Task 2: Convert discharge (Q Liters/second) to discharge meters cubed per hour, then create a new column rounding discharge to the nearest 10ths place (i.e., round to the tens place). Create two additional new columns that round the discharge up and down (ceiling and floor). Then use Select so the dataframe only includes the Solute column from the original dataset and the three new columns you created.
+
+```{r}
+#Use mutate to make desired columns by converting to cubic meters per hour, then rounding with round, floor, and ceiling
+solutes_discharge <- solutes |>
+  mutate(Q_Ls = Q_Ls * 3.6) |>
+  mutate(Q10 = round(Q_Ls, digits = -1)) |>
+  mutate(Q_Floor = floor(Q_Ls)) |>
+  mutate(Q_Ceiling = ceiling(Q_Ls))
+
+#Select desired columns
+Selected_solutes <- solutes_discharge |>
+  select(c(Solute, Q10, Q_Floor, Q_Ceiling))
+
+```
+
+
+
+Task 3: Complete the discharge: (a) Create a dataframe that contains WS (Monitoring station), Site (the LTER site - most sites contain multiple WS), Date, and Q_Ls. (b) Select only the distinct rows. (c) Complete the discharge data for each date in 2012 for Site ELA. Fill in WS with appropriate data values. Your final df should have 36 rows. HINT: If you do not have 36 rows, you might want to consider when you are filtering to 2012 and Site ELA.
+
+ 
+
+```{r}
+WS_Site_df <- solutes |>
+  select(c(WS, Site, Date, Q_Ls))
+WS_Site_df <- distinct(WS_Site_df)
+
+filtered_site_date <- WS_Site_df |>
+  complete(WS, Date, fill = list(Q_Ls = as.numeric("NA"))) |>
+  fill(Site, .direction="down") |>
+  filter(str_detect(Date, "^2012"), Site == "ELA")
+```
+
+
+Task 4: Remove missing FWMC values, round the values to the hundreths place and calculate mean, median, and mode for each watershed (WS) in 2007. 
+
+```{r}
+#This is a previously created function to find the mode
+get_mode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+#Drop NAs, round Q_Ls column, and group by WS
+sum_stats <- solutes |>
+  drop_na(FWMC) |>
+  mutate(Q_Ls = round(Q_Ls, digits = 3)) |>
+  group_by(WS)
+
+#Get summary stats and mode
+summary(sum_stats)
+get_mode(sum_stats$Q_Ls)
+```
+

@@ -1,0 +1,61 @@
+---
+title: "Brett Week 4 Pre-Assignment"
+author: "Brett Lambert"
+date: "2024-09-06"
+output: html_document
+---
+
+
+You will use the tools we have covered so far within `tidyverse` up through data management 1. You will use the Gillnet catches from 1930-1932 in Lake Michigan data to answer the following questions. Please annotate your code, provide brief reasoning as to why you used specific functions to complete the tasks, and provide a brief interpretation of the result of the code chunk.
+
+
+Task 1: Using the fish length dataset (lakeM_Length.csv), replace all of the NAs in the SEX column of the length dataset with "U" for unknown then use slice to look at rows 81-86. Note that SEX is a double type format but must be a character type to change NAs to a character "U"
+
+```{r}
+#Load tidyverse
+library(tidyverse)
+#Read in data
+length_data <- read_csv("lakeM_Length.csv")
+#Convert SEX column to character to replace NAs with character value "U"
+length_data$SEX <- as.character(length_data$SEX)
+str(length_data$SEX)
+
+#Use mutate with replace_na to change column in place. Perhaps better practice to make new column, but saved as new object so the original dataframe object is intact.
+replace_na_df <- length_data |>
+  mutate(SEX = replace_na(SEX, "U"))
+
+#Print desired slice of data
+print(slice(replace_na_df, 81:86))
+```
+
+Task 2 Convert LENGTH (units = mm) to cm, then Create a New column rounding Length_cm to the nearest 10 cm (i.e., round to the tens place). Create two additional new columns that round the fish lengths up (ceiling and down (floor)). Then use Select so the dataframe only includes the SPECIES column from the original dataset and the four new columns you created.
+
+```{r}
+#Use mutate to create new columns for Length_cm, Near_Ten, Ceiling_cm, and Floor_cm
+str(length_data$LENGTH)
+convert_length <- length_data |>
+  mutate(Length_cm = LENGTH/100) |>
+  mutate(Near_Ten = round(Length_cm, digits = -1)) |>
+  mutate(Ceiling_cm = round(ceiling(Length_cm))) |>
+  mutate(Floor_cm = round(floor(Length_cm))) |>
+  #Use select to keep the desited columns
+  select(SPECIES, Length_cm, Near_Ten, Ceiling_cm, Floor_cm)
+
+
+```
+
+
+Task 3 Complete the fulmar catch data (lakeM_Fulmar_Catch.csv) so the sample size for all species codes is included and the rest of the columns are filled with the sample data. Hint: GN_EFFORT_ID is the column for site/sample; also, this would be easier if you remove the weight column.
+
+```{r}
+#Read in data 
+Fulmar <- read_csv("lakeM_Fulmar_Catch.csv")
+#Print unique to breifly check to ensure new values appear to be correct. Not fully checking 22K rows, but better than nothing.
+unique(Fulmar$SPECIES)
+#Drop WEIGHT col and use complete and fill. This fills all not explicit combinations of GN_EFFORT_ID and SPECIES with observations of N = 0.
+Fulmar_2 <- Fulmar |>
+  select(-WEIGHT) |>
+  complete(GN_EFFORT_ID, SPECIES, fill = list(N=0))
+unique(Fulmar_2$SPECIES)
+```
+

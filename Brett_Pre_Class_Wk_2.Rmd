@@ -1,0 +1,84 @@
+---
+title: "Pre Class Week 2 - Data Wrangling"
+author: "Brett Lambert"
+date: "2024-08-23"
+output: html_document
+---
+
+You will use the Gillnet catches from 1930-1932 in Lake Michigan data to answer the following questions. You will use the tools we have covered so far within `dplyr`.
+
+Task 1: Read in data. How many columns and rows are there? 
+
+```{r Task 1}
+library(tidyverse)
+fish<-read_csv("./2018 LTRM data.csv", 
+                #change the weight column to a numeric rather than a character string when importing the data
+               col_types= list(weight =col_double()))
+dim(fish)
+
+#4809 rows 86 cols
+
+```
+
+
+Task 2: How many species are in the "Length" dataset?
+
+```{r Task 2}
+fish_length <- read_csv("lakeM_Length.csv")
+unique(fish_length$SPECIES)
+#12?
+```
+
+Task 3 Rename the LENGTH column to "LENGTH_mm", then remove all columns except GN_EFFORT_ID, SPECIES, and LENGTH_mm.
+
+```{r Task 3}
+#Part 1 rename column 
+fish_length_2 <- rename(fish_length, LENGTH_mm = LENGTH)
+
+#Part 2  use select to keep/remove columns of interest
+fish_length3 <- select(fish_length_2, GN_EFFORT_ID, SPECIES, LENGTH_mm)
+
+```
+
+
+Task 4: How many different species were observed Gillnet ID 42812? How many individuals from Gillnet ID 42833 were not species 307?
+
+```{r Task 4}
+#filter by GN_Effort_ID
+temp <- filter(fish_length, GN_EFFORT_ID == 42812)
+#unique 
+unique(temp)
+glimpse(temp)
+#Filter by species
+unique(filter(temp, SPECIES != 307))
+```
+
+Task 5: Use "rename" to change the column names of SPECIES and LENGTH to SPECIES_CODE and LENGTH_MM respectively then use "filter to create a dataset that only includes records from GN_EFFORT_IDs 42834 and 42835 for SPECIES 213 and 127. How many rows are in this dataset? How many rows if you keep all species except 213 and 307
+
+```{r Task 5}
+#Rename columns
+fish_renamed <- rename(fish_length, SPECIES_CODE = SPECIES, LENGTH_MM = LENGTH)
+
+#Filter all rows that include GN ID and Species codes listed above
+filtered <- filter(fish_renamed, GN_EFFORT_ID %in% c(42834, 42835), SPECIES_CODE %in% c(213, 127))
+
+filtered_2 <- filter(filtered, SPECIES_CODE != 213)
+
+dim(filtered_2)
+```
+
+
+Task 6: Add a new column to your length dataframe for lengths and weights in cm and kg respectively and populate the columns using mutate. Filter to remove all rows that have no weight data. What is the weight and species number of the heaviest fish (arrange)?
+
+```{r Task 6}
+#Use mutate to create new columns Length_cm and Weight_kg
+names(fish_length)
+new_fish <- mutate(fish_length, Length_cm = LENGTH, Weight_kg = WEIGHT)
+
+#Use filter to remove rows that have no weight data
+no_na_fish <- filter(new_fish, !is.na(Weight_kg))
+#select for weight and species columns
+Weight_Spec <- select(no_na_fish, Weight_kg, SPECIES)
+#arrange in descending order to get heaviest weight
+arrange(Weight_Spec, desc(Weight_kg))
+```

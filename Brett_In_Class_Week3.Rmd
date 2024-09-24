@@ -1,0 +1,129 @@
+---
+title: "Brett In Class Week 3"
+author: "Brett Lambert"
+date: "2024-08-21"
+output: html_document
+---
+
+You will use the Stream solutes data (streamsolutes.csv) to answer the following questions. You will use the tools we have covered so far within `dplyr` and synthesize the information by using the pipe to answer the following questions. Please annotate your code, provide brief reasoning as to why you used specific functions to complete the tasks, and provide a brief interpretation of the result of the code chunk.
+
+Task 1: How many times were each type of solute sampled at each Site? 
+Which Site has the greatest number of total solute readings? 
+
+```{r Task 1}
+library(tidyverse)
+#read data
+solute <- read_csv("streamsolutes.csv")
+
+#group by solute then summarize count for each solute type and arrange descending
+sol_group <- solute |>
+  group_by(Site, Solute) |>
+  summarise(N = n()) |>
+  arrange(desc(N))
+
+#Group by Site then summarize count total for each site and arrange descending
+site_group <- solute |>
+  group_by(Site) |>
+ summarise(N = n()) |>
+  arrange(desc(N))
+#DOR has highest total
+
+```
+
+Task 2: What is the average and range values for each solute type across all Sites? 
+```{r Task 2}
+Sol_type <- solute |>
+  group_by(Solute) |>
+  mutate(QLS_mean = mean(Q_Ls, na.rm=TRUE), 
+            mgL_mean = mean(mgL, na.rm=TRUE), 
+            FWMC_mean = mean(FWMC, na.rm = TRUE)) |>
+ distinct(Solute, .keep_all = TRUE)
+min(Sol_type$Q_Ls)
+max(Sol_type$Q_Ls)
+min(Sol_type$mgL)
+max(Sol_type$mgL)
+min(Sol_type$FWMC)
+max(Sol_type$FWMC)
+```
+
+Task 3: In 2004, which Site had the largest DOC value and what was that value? 
+
+```{r Task 3}
+#Use filter to use "starts with" for date values then filter by solute DOC and arrange. Finally print max value
+Doc_data <- solute |>
+  filter(str_detect(Date, "^2004")) |>
+  filter(Solute == "DOC") |>
+  arrange(desc(Q_Ls))
+
+max(Doc_data$Q_Ls)
+```
+
+Task 4: For samples with a discharge value of 100 L/s or less, what were the highest values for each solute? 
+
+```{r}
+sol_discharge <- solute |>
+  filter(Q_Ls < 100 | Q_Ls == 100) |>
+  group_by(Solute)
+
+#filter for max values of mgL on grouped solutes
+x <- filter(sol_discharge, mgL == max(mgL))
+unique(solute$Solute)
+#Sanity check for all solvents to ensure correct answer
+y1 <- solute |>
+  filter(Solute == "TDP") |>
+  filter(Q_Ls < 100 | Q_Ls == 100) |>
+  arrange(desc(mgL))
+
+y2 <- solute |>
+  filter(Solute == "Ca") |>
+  filter(Q_Ls < 100 | Q_Ls == 100) |>
+  arrange(desc(mgL))
+
+y3 <- solute |>
+  filter(Solute == "DOC") |>
+  filter(Q_Ls < 100 | Q_Ls == 100) |>
+  arrange(desc(mgL))
+
+y4 <- solute |>
+  filter(Solute == "NO3") |>
+  filter(Q_Ls < 100 | Q_Ls == 100) |>
+  arrange(desc(mgL))
+
+y5 <- solute |>
+  filter(Solute == "SO4") |>
+  filter(Q_Ls < 100 | Q_Ls == 100) |>
+  arrange(desc(mgL))
+
+y6 <- solute |>
+  filter(Solute == "NH4") |>
+  filter(Q_Ls < 100 | Q_Ls == 100) |>
+  arrange(desc(mgL))
+#Yep all correct
+```
+
+Task 5: For site BBWM in year 1989, what was the average flow-weighted mean concentrations (FWMC) for each solute type? 
+
+```{r}
+#Here, we first filter for only site BBWM then filter by the year 1989. Next, we group by Solute and summarize with the mean function on the FWMC col
+BBWM_data <- solute |>
+  filter(Site == "BBWM") |>
+  filter(str_detect(Date, "^1989")) |>
+  group_by(Solute) |>
+  summarize(avg = mean(FWMC, na.rm = TRUE))
+```
+
+Task 6: What is the average discharge in cubic feet per second for each Site in 2006?
+
+```{r}
+#First, we need to make a column for cubic feet per second by multiplying Q_Ls by 0.033 (conversion source: https://www.convertunits.com/from/cubic+feet+per+second/to/quart/second) then drop the Q_Ls column (not necessary but we already made the conversion so it reduces confusion). Finally, we filter by year 2006, group by site and then summarize with the average of C_Fs while removing NAs. 
+
+discharge <- solute |>
+  mutate(C_Fs = Q_Ls * 0.033) |>
+  select(-Q_Ls) |>
+  filter(str_detect(Date, "^2006")) |>
+  group_by(Site) |>
+  summarize(avg_disch = mean(C_Fs, na.rm = TRUE))
+```
+
+
+
